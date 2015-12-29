@@ -1,0 +1,36 @@
+Message 0x20
+The 0x20 message contains compass data. Here is the structure of the message, fields marked with XX I'm not sure about yet. The others will be described below.
+
+55 AA 20 06 CX CX CY CY CZ CZ CS CS
+
+Values in the message are stored in little endian.
+
+HEADER
+-------------
+BYTE 1-2: message header - always 55 AA
+BYTE 3: message id (0x20 for compass message)
+BYTE 4: length of the payload (0x06 or 6 decimal for 0x20 message)
+
+PAYLOAD
+--------------
+BYTE 5-6 (CX): compass X axis data (signed) - see comments below
+BYTE 7-8 (CY): compass Y axis data (signed) - see comments below
+BYTE 9-10 (CZ): compass Z axis data (signed) - see comments below
+
+CHECKSUM
+-----------------
+BYTE 11-12 (CS): checksum, calculated the same way as for uBlox binary messages
+
+All the bytes of the payload except 9th are XORed with a mask. Mask is calculated based on the value of the 9th byte.
+
+If we index bits from LSB to MSB as 0-7 we have:
+mask[0] = 9thByte[0] xor 9thByte[4]
+mask[1] = 9thByte[1] xor 9thByte[5]
+mask[2] = 9thByte[2] xor 9thByte[6]
+mask[3] = 9thByte[3] xor 9thByte[7] xor 9thByte[0];
+mask[4] = 9thByte[1];
+mask[5] = 9thByte[2];
+mask[6] = 9thByte[3];
+mask[7] = 9thByte[4] xor 9thByte[0];
+
+To calculate the heading (not tilt compensated) you need to do atan2 on the resulting y any a values, convert radians to degrees and add 360 if the result is negative.

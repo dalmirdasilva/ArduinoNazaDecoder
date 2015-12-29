@@ -25,7 +25,7 @@ double NazaDecoder::getSpeed() {
     return spd;
 }
 
-NazaDecoder::fixType NazaDecoder::getFixType() {
+NazaDecoder::FixType NazaDecoder::getFixType() {
     return fix;
 }
 
@@ -77,6 +77,14 @@ uint8_t NazaDecoder::getSecond() {
     return second;
 }
 
+NazaDecoder::VersionType NazaDecoder::getFirmwareVersion() {
+    return firmwareVersion;
+}
+
+NazaDecoder::VersionType NazaDecoder::getHardwareVersion() {
+    return hardwareVersion;
+}
+
 uint8_t NazaDecoder::decode(int16_t input) {
 
     // header (part 1 - 0x55)
@@ -84,8 +92,8 @@ uint8_t NazaDecoder::decode(int16_t input) {
         seq++;
     }
 
-    // header (part 2 - 0xAA)
-    else if ((seq == 1) && (input == 0xAA)) {
+    // header (part 2 - 0xaa)
+    else if ((seq == 1) && (input == 0xaa)) {
         cs1 = 0;
         cs2 = 0;
         seq++;
@@ -98,7 +106,7 @@ uint8_t NazaDecoder::decode(int16_t input) {
     // message id
     // message payload length (should match message id)
     // store payload in buffer
-    else if ((seq == 3) && (((msgId == 0x10) && (input == 0x3A)) || ((msgId == 0x20) && (input == 0x06)))) {
+    else if ((seq == 3) && (((msgId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((msgId == NAZA_MESSAGE_COMPASS_TYPE) && (input == NAZA_MESSAGE_COMPASS_SIZE)) || ((msgId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
         msgLen = input;
         cnt = 0;
         updateChecksum(input);
@@ -128,9 +136,9 @@ uint8_t NazaDecoder::decode(int16_t input) {
         seq = 0;
 
         // Decode GPS data
-        if (msgId == NAZA_MESSAGE_GPS) {
-            uint8_t mask = payload[55];
-            uint32_t time = pack4(0, mask);
+        if (msgId == NAZA_MESSAGE_GPS_TYPE) {
+            uint8_t mask = payload[NAZA_MESSAGE_POS_XM];
+            uint32_t time = pack4(NAZA_MESSAGE_POS_DT, mask);
             second = time & 0x3f;
             time >>= 6;
             minute = time & 0x3f;
@@ -145,24 +153,24 @@ uint8_t NazaDecoder::decode(int16_t input) {
             month = time & 0x0f;
             time >>= 4;
             year = time & 0x7f;
-            lon = (double) pack4(4, mask) / 10000000;
-            lat = (double) pack4(8, mask) / 10000000;
-            gpsAlt = (double) pack4(12, mask) / 1000;
-            double nVel = (double) pack4(28, mask) / 100;
-            double eVel = (double) pack4(32, mask) / 100;
+            lon = (double) pack4(NAZA_MESSAGE_POS_LO, mask) / 10000000;
+            lat = (double) pack4(NAZA_MESSAGE_POS_LA, mask) / 10000000;
+            gpsAlt = (double) pack4(NAZA_MESSAGE_POS_AL, mask) / 1000;
+            double nVel = (double) pack4(NAZA_MESSAGE_POS_NV, mask) / 100;
+            double eVel = (double) pack4(NAZA_MESSAGE_POS_EV, mask) / 100;
             spd = sqrt(nVel * nVel + eVel * eVel);
             cog = atan2(eVel, nVel) * 180.0 / M_PI;
             if (cog < 0) {
                 cog += 360.0;
             }
-            gpsVsi = -(double) pack4(36, mask) / 100;
-            vdop = (double) pack2(42, mask) / 100;
-            double ndop = (double) pack2(44, mask) / 100;
-            double edop = (double) pack2(46, mask) / 100;
+            gpsVsi = -(double) pack4(NAZA_MESSAGE_POS_DV, mask) / 100;
+            vdop = (double) pack2(NAZA_MESSAGE_POS_VD, mask) / 100;
+            double ndop = (double) pack2(NAZA_MESSAGE_POS_ND, mask) / 100;
+            double edop = (double) pack2(NAZA_MESSAGE_POS_ED, mask) / 100;
             hdop = sqrt(ndop * ndop + edop * edop);
-            sat = payload[48];
-            uint8_t fixType = payload[50] ^ mask;
-            uint8_t fixFlags = payload[52] ^ mask;
+            sat = payload[NAZA_MESSAGE_POS_NS];
+            uint8_t fixType = payload[NAZA_MESSAGE_POS_FT] ^ mask;
+            uint8_t fixFlags = payload[NAZA_MESSAGE_POS_SF] ^ mask;
             switch (fixType) {
             case 2:
                 fix = FIX_2D;
@@ -174,32 +182,41 @@ uint8_t NazaDecoder::decode(int16_t input) {
                 fix = NO_FIX;
                 break;
             }
-            if ((fix != NO_FIX) && (fixFlags & 0x02))
+            if ((fix != NO_FIX) && (fixFlags & 0x02)) {
                 fix = FIX_DGPS;
+            }
         }
 
         // Decode compass data (not tilt compensated)
-        else if (msgId == NAZA_MESSAGE_COMPASS) {
+        // To calculate the heading (not tilt compensated) you need to do atan2 on the resulting y any a values, convert radians to degrees and add 360 if the result is negative.
+        else if (msgId == NAZA_MESSAGE_COMPASS_TYPE) {
             uint8_t mask = payload[4];
             mask = (((mask ^ (mask >> 4)) & 0x0F) | ((mask << 3) & 0xF0)) ^ (((mask & 0x01) << 3) | ((mask & 0x01) << 7));
-            int16_t x = pack2(0, mask);
-            int16_t y = pack2(2, mask);
-            if (x > magXMax)
+            int16_t x = pack2(NAZA_MESSAGE_POS_CX, mask);
+            int16_t y = pack2(NAZA_MESSAGE_POS_CY, mask);
+            if (x > magXMax) {
                 magXMax = x;
-            if (x < magXMin)
+            }
+            if (x < magXMin) {
                 magXMin = x;
-            if (y > magYMax)
+            }
+            if (y > magYMax) {
                 magYMax = y;
-            if (y < magYMin)
+            }
+            if (y < magYMin) {
                 magYMin = y;
+            }
             heading = -atan2(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2)) * 180.0 / M_PI;
             if (heading < 0) {
                 heading += 360.0;
             }
+        } else if (msgId == NAZA_MESSAGE_MODULE_VERSION_TYPE) {
+            firmwareVersion.version = pack4(NAZA_MESSAGE_POS_FW, 0x00);
+            hardwareVersion.version = pack4(NAZA_MESSAGE_POS_HW, 0x00);
         }
         return msgId;
     } else {
-        return NAZA_MESSAGE_NONE;
+        return NAZA_MESSAGE_NONE_TYPE;
     }
 }
 

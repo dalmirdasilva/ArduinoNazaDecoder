@@ -1,0 +1,22 @@
+Message 0x30
+This is still to be confirmed but I believe the 0x30 message carries the GPS module hardware id and firmware version.
+
+55 AA 30 0C XX XX XX XX FW FW FW FW HW HW HW HW CS CS
+
+Note that you need to read version numbers backwards (02 01 00 06 means v6.0.1.2)
+
+HEADER
+-------------
+BYTE 1-2: message header - always 55 AA
+BYTE 3: message id (0x30 for GPS module versions message)
+BYTE 4: length of the payload (0x0C or 12 decimal for 0x30 message)
+
+PAYLOAD
+--------------
+BYTE 5-8" ??? (seems to be always 0)
+BYTE 9-12 (FW): firmware version
+BYTE 13-16 (HW): hardware id
+
+CHECKSUM
+-----------------
+BYTE 17-18 (CS): checksum, calculated the same way as for uBlox binary messages
