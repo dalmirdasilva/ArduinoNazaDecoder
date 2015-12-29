@@ -117,10 +117,10 @@ public:
     } FixType;
 
     typedef struct {
-        uint8_t major;
-        uint8_t minor;
-        uint8_t build;
         uint8_t revision;
+        uint8_t build;
+        uint8_t minor;
+        uint8_t major;
     } VersionSchemeType;
 
     typedef union {
@@ -155,6 +155,7 @@ public:
     VersionType getFirmwareVersion();
     VersionType getHardwareVersion();
 
+    uint8_t isLocked();
 private:
     int16_t payload[58];
     int16_t seq;
@@ -213,6 +214,9 @@ private:
 
     VersionType firmwareVersion;
     VersionType hardwareVersion;
+
+    uint16_t lastLock;
+    uint8_t locked;
 
     int32_t pack4(uint8_t i, uint8_t mask);
 

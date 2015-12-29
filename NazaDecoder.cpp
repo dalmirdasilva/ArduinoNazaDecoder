@@ -85,6 +85,10 @@ NazaDecoder::VersionType NazaDecoder::getHardwareVersion() {
     return hardwareVersion;
 }
 
+uint8_t NazaDecoder::isLocked() {
+    return locked;
+}
+
 uint8_t NazaDecoder::decode(int16_t input) {
 
     // header (part 1 - 0x55)
@@ -185,6 +189,9 @@ uint8_t NazaDecoder::decode(int16_t input) {
             if ((fix != NO_FIX) && (fixFlags & 0x02)) {
                 fix = FIX_DGPS;
             }
+            uint16_t lock = pack2(NAZA_MESSAGE_POS_SN, 0x00);
+            locked = (lock == lastLock + 1);
+            lastLock = lock;
         }
 
         // Decode compass data (not tilt compensated)

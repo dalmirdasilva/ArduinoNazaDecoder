@@ -5,29 +5,45 @@
 ########################################################################
 # Datatypes (KEYWORD1)
 ########################################################################
-NazaDecoder		KEYWORD1
-NO_FIX			KEYWORD1
-FIX_2D			KEYWORD1
-FIX_3D			KEYWORD1
-FIX_DGPS		KEYWORD1
+NazaDecoder			KEYWORD1
+VersionType			KEYWORD1
+VersionSchemeType	KEYWORD1
+FixType				KEYWORD1
+MessageSize			KEYWORD1
+MessageType			KEYWORD1
+ModuleVersionPayloadPosition	KEYWORD1
+CompassPayloadPosition	KEYWORD1
+GPSPayloadPosition	KEYWORD1
+NO_FIX				KEYWORD1
+FIX_2D				KEYWORD1
+FIX_3D				KEYWORD1
+FIX_DGPS			KEYWORD1
 
 ########################################################################
 # Methods and Functions (KEYWORD2)
 ########################################################################
-getLat 			KEYWORD2
-getLon 			KEYWORD2
-getGpsAlt 		KEYWORD2
-getSpeed 		KEYWORD2
-getFixType 		KEYWORD2
-getNumSat 		KEYWORD2
-getHeadingNc 	KEYWORD2
-getCog 			KEYWORD2
-getGpsVsi 		KEYWORD2
-getHdop 		KEYWORD2
-getVdop 		KEYWORD2
-getYear 		KEYWORD2
-getMonth 		KEYWORD2
-getDay 			KEYWORD2
-getHour 		KEYWORD2
-getMinute 		KEYWORD2
-getSecond 		KEYWORD2
+getLat 				KEYWORD2
+getLon 				KEYWORD2
+getGpsAlt 			KEYWORD2
+getSpeed 			KEYWORD2
+getFixType 			KEYWORD2
+getNumSat 			KEYWORD2
+getHeadingNc 		KEYWORD2
+getCog 				KEYWORD2
+getGpsVsi 			KEYWORD2
+getHdop 			KEYWORD2
+getVdop 			KEYWORD2
+getYear 			KEYWORD2
+getMonth 			KEYWORD2
+getDay 				KEYWORD2
+getHour 			KEYWORD2
+getMinute 			KEYWORD2
+getSecond 			KEYWORD2
+getFirmwareVersion	KEYWORD2
+getHardwareVersion	KEYWORD2
+revision			KEYWORD2
+build				KEYWORD2
+minor				KEYWORD2
+major				KEYWORD2
+version				KEYWORD2
+scheme				KEYWORD2
