@@ -26,7 +26,7 @@ public:
         // latitude (x10^7, degree decimal)
         NAZA_MESSAGE_POS_LA = 0x0c - MESSAGE_HEADER_SIZE,
 
-        // altitude (in milimeters)
+        // altitude (in millimeters)
         NAZA_MESSAGE_POS_AL = 0x10 - MESSAGE_HEADER_SIZE,
 
         // horizontal accuracy estimate (see uBlox NAV-POSLLH message for details)
