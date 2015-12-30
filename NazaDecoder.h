@@ -9,7 +9,8 @@
 
 #include <Arduino.h>
 
-#define MESSAGE_HEADER_SIZE 0x04
+#define MESSAGE_HEADER_SIZE                 0x04
+#define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3a
 
 class NazaDecoder {
 
@@ -131,17 +132,18 @@ public:
     NazaDecoder();
 
     uint8_t decode(int16_t input);
-    double getLat();
-    double getLon();
-    double getGpsAlt();
+
+    double getLatitude();
+    double getLongitude();
+    double getAltitude();
     double getSpeed();
     FixType getFixType();
-    uint8_t getNumSat();
+    uint8_t getSatellites();
     double getHeading();
-    double getCog();
-    double getGpsVsi();
-    double getHdop();
-    double getVdop();
+    double getCourseOverGround();
+    double getVerticalSpeedIndicator();
+    double getHorizontalDilutionOfPrecision();
+    double getVerticalDilutionOfPrecision();
     uint8_t getYear();
     uint8_t getMonth();
     uint8_t getDay();
@@ -157,54 +159,56 @@ public:
 
     uint8_t isLocked();
 private:
-    int16_t payload[58];
-    int16_t seq;
-    int16_t cnt;
-    int16_t msgId;
-    int16_t msgLen;
+    int16_t payload[NAZA_MESSAGE_MAX_PAYLOAD_LENGTH];
+    int16_t sequence;
+    int16_t count;
+    int16_t messageId;
+    int16_t messageLength;
 
     // checksum #1
-    uint8_t cs1;
+    uint8_t checksum1;
 
     // checksum #2
-    uint8_t cs2;
+    uint8_t checksum2;
+
     int16_t magXMin;
     int16_t magXMax;
     int16_t magYMin;
     int16_t magYMax;
 
     // longitude in degree decimal
-    double lon;
+    double longitude;
 
     // latitude in degree decimal
-    double lat;
+    double latitude;
 
     // altitude in m (from GPS)
-    double gpsAlt;
+    double altitude;
 
     // speed in m/s
-    double spd;
+    double speed;
 
     // fix type
     FixType fix;
 
     // number of satellites
-    uint8_t sat;
+    uint8_t satellites;
 
     // heading (not tilt compensated) in degrees
     double heading;
 
     // course over ground
-    double cog;
+    double courseOverGround;
 
     // vertical speed indicator (from GPS) in m/s (a.k.a. climb speed)
-    double gpsVsi;
+    double verticalSpeedIndicator;
 
     // horizontal dilution of precision
-    double hdop;
+    double horizontalDilutionOfPrecision;
 
     // vertical dilution of precision
-    double vdop;
+    double verticalDilutionOfPrecision;
+
     uint8_t year;
     uint8_t month;
     uint8_t day;
