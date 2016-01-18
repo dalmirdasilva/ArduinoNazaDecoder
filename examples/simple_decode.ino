@@ -11,16 +11,16 @@ void loop() {
     uint8_t decodedMessage = naza.decode(Serial.read());
     switch (decodedMessage) {
       case NazaDecoder::NAZA_MESSAGE_GPS_TYPE:
-        Serial.print("Lat: ");
-        Serial.print(naza.getLat(), 7);
-        Serial.print(", Lon: ");
-        Serial.print(naza.getLon(), 7);
-        Serial.print(", Alt: ");
-        Serial.print(naza.getGpsAlt(), 7);
-        Serial.print(", Fix: ");
+        Serial.print("Latitude: ");
+        Serial.print(naza.getLatitude(), 7);
+        Serial.print(", Longitude: ");
+        Serial.print(naza.getLongitude(), 7);
+        Serial.print(", Altitude: ");
+        Serial.print(naza.getAltitude(), 7);
+        Serial.print(", FixType: ");
         Serial.print(naza.getFixType());
-        Serial.print(", Sat: ");
-        Serial.println(naza.getNumSat());
+        Serial.print(", Satellites: ");
+        Serial.println(naza.getSatellites());
         Serial.print(", Locked: ");
         Serial.println(naza.isLocked());
         break;
