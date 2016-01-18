@@ -8,15 +8,17 @@
 #define __ARDUINO_NAZA_DECODER_H__
 
 #include <Arduino.h>
+#include <Gps.h>
+#include <Compass.h>
 
 #define MESSAGE_HEADER_SIZE                 0x04
 #define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3a
 
-class NazaDecoder {
+class NazaDecoder: public Gps, public Compass {
 
 public:
 
-    typedef enum {
+    enum GPSPayloadPosition {
 
         // date and time
         NAZA_MESSAGE_POS_DT = 0x04 - MESSAGE_HEADER_SIZE,
@@ -74,9 +76,9 @@ public:
 
         // checksum, calculated the same way as for uBlox binary messages
         NAZA_MESSAGE_POS_CS = 0x3e - MESSAGE_HEADER_SIZE
-    } GPSPayloadPosition;
+    };
 
-    typedef enum {
+    enum CompassPayloadPosition {
 
         // compass X axis data (signed)
         NAZA_MESSAGE_POS_CX = 0x04 - MESSAGE_HEADER_SIZE,
@@ -86,60 +88,53 @@ public:
 
         // compass Z axis data (signed)
         NAZA_MESSAGE_POS_CZ = 0x08 - MESSAGE_HEADER_SIZE
-    } CompassPayloadPosition;
+    };
 
-    typedef enum {
+    enum ModuleVersionPayloadPosition {
 
         // firmware version
         NAZA_MESSAGE_POS_FW = 0x08 - MESSAGE_HEADER_SIZE,
 
         // hardware id
         NAZA_MESSAGE_POS_HW = 0x0c - MESSAGE_HEADER_SIZE
-    } ModuleVersionPayloadPosition;
+    };
 
-    typedef enum {
+    enum MessageType {
         NAZA_MESSAGE_NONE_TYPE = 0x00,
         NAZA_MESSAGE_GPS_TYPE = 0x10,
         NAZA_MESSAGE_COMPASS_TYPE = 0x20,
         NAZA_MESSAGE_MODULE_VERSION_TYPE = 0x30
-    } MessageType;
+    };
 
-    typedef enum {
-        NAZA_MESSAGE_GPS_SIZE = 0x3a,
-        NAZA_MESSAGE_COMPASS_SIZE = 0x06,
-        NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
-    } MessageSize;
+    enum MessageSize {
+        NAZA_MESSAGE_GPS_SIZE = 0x3a, NAZA_MESSAGE_COMPASS_SIZE = 0x06, NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
+    };
 
-    typedef enum {
-        NO_FIX = 0,
-        FIX_2D = 2,
-        FIX_3D = 3,
-        FIX_DGPS = 4
-    } FixType;
-
-    typedef struct {
+    struct VersionSchemeType {
         uint8_t revision;
         uint8_t build;
         uint8_t minor;
         uint8_t major;
-    } VersionSchemeType;
+    };
 
-    typedef union {
+    union VersionType {
         uint32_t version;
         VersionSchemeType scheme;
-    } VersionType;
+    };
 
     NazaDecoder();
 
     uint8_t decode(int16_t input);
 
+    /**
+     * Gps API.
+     */
     double getLatitude();
     double getLongitude();
     double getAltitude();
     double getSpeed();
     FixType getFixType();
     uint8_t getSatellites();
-    double getHeading();
     double getCourseOverGround();
     double getVerticalSpeedIndicator();
     double getHorizontalDilutionOfPrecision();
@@ -152,6 +147,11 @@ public:
     uint8_t getHour();
     uint8_t getMinute();
     uint8_t getSecond();
+
+    /**
+     * Compass API
+     */
+    double getHeading();
 
     // Note that you need to read version numbers backwards (02 01 00 06 means v6.0.1.2)
     VersionType getFirmwareVersion();

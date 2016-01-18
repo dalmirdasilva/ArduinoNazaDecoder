@@ -34,6 +34,8 @@
 								<option id="de.innot.avreclipse.cppcompiler.option.incpath.448280984" name="Include Paths (-I)" superClass="de.innot.avreclipse.cppcompiler.option.incpath" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoCore}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoCore/variants/standard}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoGps/Gps}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduinoCompass/Compass}&quot;"/>
 								</option>
 								<inputType id="de.innot.avreclipse.cppcompiler.input.1102243887" superClass="de.innot.avreclipse.cppcompiler.input"/>
 							</tool>
