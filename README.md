@@ -4,7 +4,7 @@
 
 ## Objective
 
-Decode NAZA GPS/COMPASS messages.
+Decode NAZA GPS and MAGNETOMETER messages.
 
 ## How to install?
 
@@ -16,9 +16,9 @@ $ git clone git@github.com:dalmirdasilva/ArduinoGps.git
 $ cd ArduinoGps
 $ make install
 $ 
-$ # install ArduinoCompass dependency
-$ git clone git@github.com:dalmirdasilva/ArduinoCompass.git
-$ cd ArduinoCompass
+$ # install ArduinoMagnetometer dependency
+$ git clone git@github.com:dalmirdasilva/ArduinoMagnetometer.git
+$ cd ArduinoMagnetometer
 $ make install
 $ 
 $ # install the lib
@@ -60,7 +60,7 @@ void loop() {
         Serial.print(", Locked: ");
         Serial.println(naza.isLocked());
         break;
-      case NazaDecoder::NAZA_MESSAGE_COMPASS_TYPE:
+      case NazaDecoder::NAZA_MESSAGE_MAGNETOMETER_TYPE:
         Serial.print("Heading: ");
         Serial.println(naza.getHeading(), 2);
         break;

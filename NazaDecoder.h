@@ -9,12 +9,12 @@
 
 #include <Arduino.h>
 #include <Gps.h>
-#include <Compass.h>
+#include <Magnetometer.h>
 
 #define MESSAGE_HEADER_SIZE                 0x04
 #define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3a
 
-class NazaDecoder: public Gps, public Compass {
+class NazaDecoder: public Gps, public Magnetometer {
 
 public:
 
@@ -78,15 +78,15 @@ public:
         NAZA_MESSAGE_POS_CS = 0x3e - MESSAGE_HEADER_SIZE
     };
 
-    enum CompassPayloadPosition {
+    enum MagnetometerPayloadPosition {
 
-        // compass X axis data (signed)
+        // magnetometer X axis data (signed)
         NAZA_MESSAGE_POS_CX = 0x04 - MESSAGE_HEADER_SIZE,
 
-        // compass Y axis data (signed)
+        // magnetometer Y axis data (signed)
         NAZA_MESSAGE_POS_CY = 0x06 - MESSAGE_HEADER_SIZE,
 
-        // compass Z axis data (signed)
+        // magnetometer Z axis data (signed)
         NAZA_MESSAGE_POS_CZ = 0x08 - MESSAGE_HEADER_SIZE
     };
 
@@ -102,12 +102,12 @@ public:
     enum MessageType {
         NAZA_MESSAGE_NONE_TYPE = 0x00,
         NAZA_MESSAGE_GPS_TYPE = 0x10,
-        NAZA_MESSAGE_COMPASS_TYPE = 0x20,
+        NAZA_MESSAGE_MAGNETOMETER_TYPE = 0x20,
         NAZA_MESSAGE_MODULE_VERSION_TYPE = 0x30
     };
 
     enum MessageSize {
-        NAZA_MESSAGE_GPS_SIZE = 0x3a, NAZA_MESSAGE_COMPASS_SIZE = 0x06, NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
+        NAZA_MESSAGE_GPS_SIZE = 0x3a, NAZA_MESSAGE_MAGNETOMETER_SIZE = 0x06, NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
     };
 
     struct VersionSchemeType {
@@ -149,7 +149,7 @@ public:
     uint8_t getSecond();
 
     /**
-     * Compass API
+     * Magnetometer API
      */
     double getHeading();
 

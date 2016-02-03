@@ -24,7 +24,7 @@ void loop() {
         Serial.print(", Locked: ");
         Serial.println(naza.isLocked());
         break;
-      case NazaDecoder::NAZA_MESSAGE_COMPASS_TYPE:
+      case NazaDecoder::NAZA_MESSAGE_MAGNETOMETER_TYPE:
         Serial.print("Heading: ");
         Serial.println(naza.getHeading(), 2);
         break;

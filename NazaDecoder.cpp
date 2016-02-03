@@ -107,7 +107,8 @@ uint8_t NazaDecoder::decode(int16_t input) {
     // message id
     // message payload length (should match message id)
     // store payload in buffer
-    else if ((sequence == 3) && (((messageId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((messageId == NAZA_MESSAGE_COMPASS_TYPE) && (input == NAZA_MESSAGE_COMPASS_SIZE)) || ((messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
+    else if ((sequence == 3) && (((messageId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) &&
+            (input == NAZA_MESSAGE_MAGNETOMETER_SIZE)) || ((messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
         messageLength = input;
         count = 0;
         updateChecksum(input);
@@ -191,9 +192,9 @@ uint8_t NazaDecoder::decode(int16_t input) {
             lastLock = lock;
         }
 
-        // Decode compass data (not tilt compensated)
+        // Decode magnetometer data (not tilt compensated)
         // To calculate the heading (not tilt compensated) you need to do atan2 on the resulting y any a values, convert radians to degrees and add 360 if the result is negative.
-        else if (messageId == NAZA_MESSAGE_COMPASS_TYPE) {
+        else if (messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) {
             uint8_t mask = payload[4];
             mask = (((mask ^ (mask >> 4)) & 0x0F) | ((mask << 3) & 0xF0)) ^ (((mask & 0x01) << 3) | ((mask & 0x01) << 7));
             int16_t x = pack2(NAZA_MESSAGE_POS_CX, mask);

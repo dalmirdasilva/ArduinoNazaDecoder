@@ -12,7 +12,7 @@ FixType				KEYWORD1
 MessageSize			KEYWORD1
 MessageType			KEYWORD1
 ModuleVersionPayloadPosition	KEYWORD1
-CompassPayloadPosition	KEYWORD1
+MagnetometerPayloadPosition	KEYWORD1
 GPSPayloadPosition	KEYWORD1
 NO_FIX				KEYWORD1
 FIX_2D				KEYWORD1
