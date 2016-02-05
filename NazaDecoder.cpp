@@ -107,8 +107,8 @@ uint8_t NazaDecoder::decode(int16_t input) {
     // message id
     // message payload length (should match message id)
     // store payload in buffer
-    else if ((sequence == 3) && (((messageId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) &&
-            (input == NAZA_MESSAGE_MAGNETOMETER_SIZE)) || ((messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
+    else if ((sequence == 3)
+            && (((messageId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) && (input == NAZA_MESSAGE_MAGNETOMETER_SIZE)) || ((messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
         messageLength = input;
         count = 0;
         updateChecksum(input);
@@ -211,10 +211,7 @@ uint8_t NazaDecoder::decode(int16_t input) {
             if (y < magYMin) {
                 magYMin = y;
             }
-            heading = -atan2(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2)) * 180.0 / M_PI;
-            if (heading < 0) {
-                heading += 360.0;
-            }
+            heading = computeVectorAngle(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2));
         } else if (messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) {
             firmwareVersion.version = pack4(NAZA_MESSAGE_POS_FW, 0x00);
             hardwareVersion.version = pack4(NAZA_MESSAGE_POS_HW, 0x00);
