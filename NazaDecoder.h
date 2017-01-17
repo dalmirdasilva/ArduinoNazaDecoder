@@ -107,7 +107,9 @@ public:
     };
 
     enum MessageSize {
-        NAZA_MESSAGE_GPS_SIZE = 0x3a, NAZA_MESSAGE_MAGNETOMETER_SIZE = 0x06, NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
+        NAZA_MESSAGE_GPS_SIZE = 0x3a,
+        NAZA_MESSAGE_MAGNETOMETER_SIZE = 0x06,
+        NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
     };
 
     struct VersionSchemeType {
