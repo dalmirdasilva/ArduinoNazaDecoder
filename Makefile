@@ -1,5 +1,6 @@
 ARDUINO_LIB_PATH=~/Arduino/libraries
-SOURCE_PATH=`pwd`
+THIS_PATH=`pwd`
+SOURCE_PATH=`$(THIS_PATH)/libs/arduino/`
 
 all: 
 	@echo "Use [install], [unistall] or [doc]"

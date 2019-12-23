@@ -9,12 +9,17 @@
 #ifndef __RASPI_NAZA_DECODER_H__
 #define __RASPI_NAZA_DECODER_H__
 
+#include <iostream>
 #include <unistd.h>
 #include <string>
 #include <math.h>
+#include <fcntl.h>
+#include <termios.h>
 
 #define MESSAGE_HEADER_SIZE                 0x04
 #define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3A
+
+using namespace std;
 
 class NazaDecoder 
 {
@@ -28,7 +33,7 @@ public:
         NAZA_MESSAGE_POS_LO = 0x08 - MESSAGE_HEADER_SIZE,
 
         // latitude (x10^7, degree decimal)
-        NAZA_MESSAGE_POS_LA = 0x0c - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_LA = 0x0C - MESSAGE_HEADER_SIZE,
 
         // altitude (in millimeters)
         NAZA_MESSAGE_POS_AL = 0x10 - MESSAGE_HEADER_SIZE,
@@ -49,10 +54,10 @@ public:
         NAZA_MESSAGE_POS_DV = 0x28 - MESSAGE_HEADER_SIZE,
 
         // position DOP (see uBlox NAV-DOP message for details)
-        NAZA_MESSAGE_POS_PD = 0x2c - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_PD = 0x2C - MESSAGE_HEADER_SIZE,
 
         // vertical DOP (see uBlox NAV-DOP message for details)
-        NAZA_MESSAGE_POS_VD = 0x2e - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_VD = 0x2E - MESSAGE_HEADER_SIZE,
 
         // northing DOP (see uBlox NAV-DOP message for details)
         NAZA_MESSAGE_POS_ND = 0x30 - MESSAGE_HEADER_SIZE,
@@ -70,13 +75,13 @@ public:
         NAZA_MESSAGE_POS_SF = 0x38 - MESSAGE_HEADER_SIZE,
 
         // XOR mask
-        NAZA_MESSAGE_POS_XM = 0x3b - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_XM = 0x3B - MESSAGE_HEADER_SIZE,
 
         // sequence number (not XORed), once there is a lock - increases with every message. When the lock is lost later LSB and MSB are swapped with every message.
-        NAZA_MESSAGE_POS_SN = 0x3c - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_SN = 0x3C - MESSAGE_HEADER_SIZE,
 
         // checksum, calculated the same way as for uBlox binary messages
-        NAZA_MESSAGE_POS_CS = 0x3e - MESSAGE_HEADER_SIZE
+        NAZA_MESSAGE_POS_CS = 0x3E - MESSAGE_HEADER_SIZE
     };
 
     enum MagnetometerPayloadPosition 
@@ -97,7 +102,7 @@ public:
         NAZA_MESSAGE_POS_FW = 0x08 - MESSAGE_HEADER_SIZE,
 
         // hardware id
-        NAZA_MESSAGE_POS_HW = 0x0c - MESSAGE_HEADER_SIZE
+        NAZA_MESSAGE_POS_HW = 0x0C - MESSAGE_HEADER_SIZE
     };
 
     enum MessageType 
@@ -137,45 +142,116 @@ public:
         VersionSchemeType scheme;
     };
 
+    union GPSData 
+    {
+
+
+    };
+
     // Constructor (open serial port to communicate with GPS module)
     NazaDecoder()  : sequence(0), count(0), messageId(0), messageLength(0), checksum1(0), checksum2(0), magXMin(0), magXMax(0), magYMin(0), magYMax(0), longitude(0), latitude(0), altitude(0), speed(0), fix(NO_FIX), satellites(0), heading(0), courseOverGround(0), verticalSpeedIndicator(0), horizontalDilutionOfPrecision(
                 0), verticalDilutionOfPrecision(0), year(0), month(0), day(0), hour(0), minute(0), second(0), lastLock(0), locked(0) 
     {        
-        
+	    serial_fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
+	    if (serial_fd == -1)
+	    {
+		    //ERROR - CAN'T OPEN SERIAL PORT
+		    printf("Error - Unable to open UART.  Ensure it is not in use by another application\n");
+	    }
+	
+	    //CONFIGURE THE UART
+	    //The flags (defined in /usr/include/termios.h - see http://pubs.opengroup.org/onlinepubs/007908799/xsh/termios.h.html):
+	    //	Baud rate:- B1200, B2400, B4800, B9600, B19200, B38400, B57600, B115200, B230400, B460800, B500000, B576000, B921600, B1000000, B1152000, B1500000, B2000000, B2500000, B3000000, B3500000, B4000000
+	    //	CSIZE:- CS5, CS6, CS7, CS8
+	    //	CLOCAL - Ignore modem status lines
+	    //	CREAD - Enable receiver
+	    //	IGNPAR = Ignore characters with parity errors
+	    //	ICRNL - Map CR to NL on input (Use for ASCII comms where you want to auto correct end of line characters - don't use for bianry comms!)
+	    //	PARENB - Parity enable
+	    //	PARODD - Odd parity (else even)
+	    struct termios options;
+	    tcgetattr(serial_fd, &options);
+	    options.c_cflag = B115200 | CS8 | CLOCAL | CREAD;		//<Set baud rate
+	    options.c_iflag = IGNPAR;
+	    options.c_oflag = 0;
+	    options.c_lflag = 0;
+	    tcflush(serial_fd, TCIFLUSH);
+	    tcsetattr(serial_fd, TCSANOW, &options);
+    }
+
+    ~NazaDecoder()
+    {
+        //----- CLOSE THE UART -----
+    	close(serial_fd);
+    }
+
+    // Read data from GPS module
+    uint8_t Read()
+    {
+        //----- CHECK FOR ANY RX BYTES -----
+	    if (serial_fd != -1)
+	    {
+		    // Read up to 1024 characters (1KB data) from the port
+		    unsigned char rx_buffer[1024];
+		    auto rx_length = read(serial_fd, (void*)rx_buffer, 1024);		//Filestream, buffer to store in, number of bytes to read (max)
+		    if (rx_length < 0)
+		    {
+			    cout << "Cannot read from the port!" << endl;
+		    }
+		    else if (rx_length == 0)
+		    {
+			    //No data waiting
+                cout << "No data available!" << endl;
+		    }
+    		else
+	    	{
+		    	//Bytes received
+                for (int i = 0; i < rx_length; i++)
+                {
+                    auto decodedMessage = this->decode(rx_buffer[i]);
+                    if (decodedMessage != NAZA_MESSAGE_NONE_TYPE)
+                    {
+                        return decodedMessage;
+                    }                  
+	    	    }
+	        }
+        }
+
+        return NAZA_MESSAGE_NONE_TYPE;
     }
 
     /**
      * Gps API.
      */
-    double getLatitude() { return this->latitude; }
-    double getLongitude() { return this->longitude; }
-    double getAltitude() { return this->altitude; }
-    double getSpeed() { return this->speed; }
-    FixType getFixType() { return this->fix; }
-    uint8_t getSatellites() { return this->satellites; }
-    double getCourseOverGround() { return this->courseOverGround; }
-    double getVerticalSpeedIndicator() { return this->verticalSpeedIndicator; }
+    double getLatitude()                      { return this->latitude; }
+    double getLongitude()                     { return this->longitude; }
+    double getAltitude()                      { return this->altitude; }
+    double getSpeed()                         { return this->speed; }
+    FixType getFixType()                      { return this->fix; }
+    uint8_t getSatellites()                   { return this->satellites; }
+    double getCourseOverGround()              { return this->courseOverGround; }
+    double getVerticalSpeedIndicator()        { return this->verticalSpeedIndicator; }
     double getHorizontalDilutionOfPrecision() { return this->horizontalDilutionOfPrecision; }
-    double getVerticalDilutionOfPrecision() { return this->verticalDilutionOfPrecision; }
-    uint8_t getYear() { return this->year; }
-    uint8_t getMonth() { return this->month; }
-    uint8_t getDay() { return this->day; }
+    double getVerticalDilutionOfPrecision()   { return this->verticalDilutionOfPrecision; }
+    uint8_t getYear()                         { return this->year; }
+    uint8_t getMonth()                        { return this->month; }
+    uint8_t getDay()                          { return this->day; }
 
     // Note that for time between 16:00 and 23:59 the hour returned from GPS module is actually 00:00 - 7:59.
-    uint8_t getHour() { return this->hour; }
-    uint8_t getMinute() { return this->minute; }
-    uint8_t getSecond() { return this->second; }
+    uint8_t getHour()                         { return this->hour; }
+    uint8_t getMinute()                       { return this->minute; }
+    uint8_t getSecond()                       { return this->second; }
 
     /**
      * Magnetometer API
      */
-    double getHeading() { return this->heading; }
+    double getHeading()                       { return this->heading; }
 
     // Note that you need to read version numbers backwards (02 01 00 06 means v6.0.1.2)
-    VersionType getFirmwareVersion() { return this->firmwareVersion; }
-    VersionType getHardwareVersion() { return this->hardwareVersion; }
+    VersionType getFirmwareVersion()          { return this->firmwareVersion; }
+    VersionType getHardwareVersion()          { return this->hardwareVersion; }
 
-    uint8_t isLocked() { return this->locked; }
+    uint8_t isLocked()                        { return this->locked; }
 private:
     int16_t payload[NAZA_MESSAGE_MAX_PAYLOAD_LENGTH];
     int16_t sequence;
@@ -239,6 +315,8 @@ private:
 
     uint16_t lastLock;
     uint8_t locked;
+
+	int serial_fd = -1;
 
     // Decode message from module
     uint8_t decode(int16_t input)
@@ -394,7 +472,7 @@ private:
         for (int j = 0; j < 2; j++) {
             v.b[j] = payload[i + j] ^ mask;
         }
-        
+
         return v.d;
     }
 
