@@ -1,91 +1,58 @@
 # NazaDecoder
 
-[Documentation.pdf](Documentation.pdf)
 
 ## Objective
 
-Decode NAZA GPS and MAGNETOMETER messages.
+Decode DJI NAZA GPS and MAGNETOMETER messages with all models Raspberry Pi or Arduino.
 
-## How to install?
+## How to install and run example?
 
 Steps (on the console):
 
 ```bash
-$ # install ArduinoGps dependency
-$ git clone git@github.com:dalmirdasilva/ArduinoGps.git
-$ cd ArduinoGps
-$ make install
-$ 
-$ # install ArduinoMagnetometer dependency
-$ git clone git@github.com:dalmirdasilva/ArduinoMagnetometer.git
-$ cd ArduinoMagnetometer
-$ make install
-$ 
-$ # install the lib
-$ git clone git@github.com:dalmirdasilva/ArduinoNazaDecoder.git
-$ cd ArduinoNazaDecoder
-$ make install
+$ git clone git@github.com:markub3327/DJINazaGPSDecoder.git
+$ cd DJINazaGPSDecoder
+$ g++ main.cpp -o GPS_Example -lm
+$ ./GPS_Example
 ```
-
-## Dependency
-
-Depends on https://github.com/dalmirdasilva/ArduinoGps
 
 ## Examples
 
 ```cpp
-#include <NazaDecoder.h>
+#include "NazaDecoder.hpp"
 
-NazaDecoder naza = NazaDecoder();
+#include <iostream>
+#include <thread>
+#include <chrono>
 
-void setup() {
-  Serial.begin(115200);
-}
-
-void loop() {
-  if(Serial.available()) {
-    uint8_t decodedMessage = naza.decode(Serial.read());
-    switch (decodedMessage) {
-      case NazaDecoder::NAZA_MESSAGE_GPS_TYPE:
-        Serial.print("Latitude: ");
-        Serial.print(naza.getLatitude(), 7);
-        Serial.print(", Longitude: ");
-        Serial.print(naza.getLongitude(), 7);
-        Serial.print(", Altitude: ");
-        Serial.print(naza.getAltitude(), 7);
-        Serial.print(", FixType: ");
-        Serial.print(naza.getFixType());
-        Serial.print(", Satellites: ");
-        Serial.println(naza.getSatellites());
-        Serial.print(", Locked: ");
-        Serial.println(naza.isLocked());
-        break;
-      case NazaDecoder::NAZA_MESSAGE_MAGNETOMETER_TYPE:
-        Serial.print("Heading: ");
-        Serial.println(naza.getHeading(), 2);
-        break;
-      case NazaDecoder::NAZA_MESSAGE_MODULE_VERSION_TYPE:
-        NazaDecoder::VersionSchemeType fs = naza.getFirmwareVersion().scheme;
-        NazaDecoder::VersionSchemeType hs = naza.getHardwareVersion().scheme;
-        Serial.print("Firmware version: v");
-        Serial.print(fs.major);
-        Serial.print(".");
-        Serial.print(fs.minor);
-        Serial.print(".");
-        Serial.print(fs.build);
-        Serial.print(".");
-        Serial.println(fs.revision);
-        Serial.print("Hardware version: v");
-        Serial.print(hs.major);
-        Serial.print(".");
-        Serial.print(hs.minor);
-        Serial.print(".");
-        Serial.print(hs.build);
-        Serial.print(".");
-        Serial.println(hs.revision);
-        break;
-    }
-  }
+int main()
+{
+	NazaDecoder myGPS;
+	
+	while (1)
+	{
+		uint8_t decodedMessage = myGPS.Read();
+		switch (decodedMessage) 
+		{
+			case NazaDecoder::NAZA_MESSAGE_GPS_TYPE:
+				std::cout << "Latitude: " << myGPS.getLatitude() << endl;
+				std::cout << "Longitude: " << myGPS.getLongitude() << endl;
+				std::cout << "Altitude: " << myGPS.getAltitude() << endl;
+				std::cout << "Speed: " << myGPS.getSpeed() << endl;
+				std::cout << "FixType: " << myGPS.getFixType() << endl;
+				std::cout << "Satellites: " << (int)myGPS.getSatellites() << std::endl;
+				std::cout << (int)myGPS.getDay() << "-" << (int)myGPS.getMonth() << "-" << (int)myGPS.getYear() << ", " << (int)myGPS.getHour() << ":" << (int)myGPS.getMinute() << ":" << (int)myGPS.getSecond() << std::endl;
+				std::cout << "Locked: " << (int)myGPS.isLocked() << std::endl;
+				std::cout << std::endl;
+				break;
+			case NazaDecoder::NAZA_MESSAGE_MAGNETOMETER_TYPE:
+				std::cout << "Heading: " << myGPS.getHeading() << std::endl;
+				std::cout << std::endl;
+				break;
+		}
+	}
+	
+	return 0;
 }
 
 ```
