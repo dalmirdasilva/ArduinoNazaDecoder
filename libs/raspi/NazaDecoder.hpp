@@ -15,9 +15,12 @@
 #include <math.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <inttypes.h>
 
 #define MESSAGE_HEADER_SIZE                 0x04
 #define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3a
+
+#define RAD_TO_DEG                          57.295779513082321f
 
 using namespace std;
 
@@ -122,13 +125,13 @@ public:
         NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
     };
 
-    enum FixType
-    {
+    enum FixType {
         NO_FIX = 0x00,
-        FIX_DGPS = 0x01,
         FIX_2D = 0x02,
-        FIX_3D = 0x03
+        FIX_3D = 0x03,
+        FIX_DGPS = 0x04
     };
+
     
     struct VersionSchemeType
     {
@@ -208,35 +211,35 @@ public:
     /**
      * Gps API.
      */
-    double getLatitude()                      { return this->latitude; }
-    double getLongitude()                     { return this->longitude; }
-    double getAltitude()                      { return this->altitude; }
-    double getSpeed()                         { return this->speed; }
-    FixType getFixType()                      { return this->fix; }
-    uint8_t getSatellites()                   { return this->satellites; }
-    double getCourseOverGround()              { return this->courseOverGround; }
-    double getVerticalSpeedIndicator()        { return this->verticalSpeedIndicator; }
-    double getHorizontalDilutionOfPrecision() { return this->horizontalDilutionOfPrecision; }
-    double getVerticalDilutionOfPrecision()   { return this->verticalDilutionOfPrecision; }
-    uint8_t getYear()                         { return this->year; }
-    uint8_t getMonth()                        { return this->month; }
-    uint8_t getDay()                          { return this->day; }
+    float getLatitude()                      { return this->latitude; }
+    float getLongitude()                     { return this->longitude; }
+    float getAltitude()                      { return this->altitude; }
+    float getSpeed()                         { return this->speed; }
+    FixType getFixType()                     { return this->fix; }
+    uint8_t getSatellites()                  { return this->satellites; }
+    float getCourseOverGround()              { return this->courseOverGround; }
+    float getVerticalSpeedIndicator()        { return this->verticalSpeedIndicator; }
+    float getHorizontalDilutionOfPrecision() { return this->horizontalDilutionOfPrecision; }
+    float getVerticalDilutionOfPrecision()   { return this->verticalDilutionOfPrecision; }
+    uint8_t getYear()                        { return this->year; }
+    uint8_t getMonth()                       { return this->month; }
+    uint8_t getDay()                         { return this->day; }
 
     // Note that for time between 16:00 and 23:59 the hour returned from GPS module is actually 00:00 - 7:59.
-    uint8_t getHour()                         { return this->hour; }
-    uint8_t getMinute()                       { return this->minute; }
-    uint8_t getSecond()                       { return this->second; }
+    uint8_t getHour()                        { return this->hour; }
+    uint8_t getMinute()                      { return this->minute; }
+    uint8_t getSecond()                      { return this->second; }
 
     /**
      * Magnetometer API
      */
-    double getHeading()                       { return this->heading; }
+    float getHeading()                       { return this->heading; }
 
     // Note that you need to read version numbers backwards (02 01 00 06 means v6.0.1.2)
-    VersionType getFirmwareVersion()          { return this->firmwareVersion; }
-    VersionType getHardwareVersion()          { return this->hardwareVersion; }
+    VersionType getFirmwareVersion()         { return this->firmwareVersion; }
+    VersionType getHardwareVersion()         { return this->hardwareVersion; }
 
-    uint8_t isLocked()                        { return this->locked; }
+    uint8_t isLocked()                       { return this->locked; }
 private:
     int16_t payload[NAZA_MESSAGE_MAX_PAYLOAD_LENGTH];
     int16_t sequence;
@@ -256,16 +259,16 @@ private:
     int16_t magYMax;
 
     // longitude in degree decimal
-    double longitude;
+    float longitude;
 
     // latitude in degree decimal
-    double latitude;
+    float latitude;
 
     // altitude in m (from GPS)
-    double altitude;
+    float altitude;
 
     // speed in m/s
-    double speed;
+    float speed;
 
     // fix type
     FixType fix;
@@ -274,19 +277,19 @@ private:
     uint8_t satellites;
 
     // heading (not tilt compensated) in degrees
-    double heading;
+    float heading;
 
     // course over ground
-    double courseOverGround;
+    float courseOverGround;
 
     // vertical speed indicator (from GPS) in m/s (a.k.a. climb speed)
-    double verticalSpeedIndicator;
+    float verticalSpeedIndicator;
 
     // horizontal dilution of precision
-    double horizontalDilutionOfPrecision;
+    float horizontalDilutionOfPrecision;
 
     // vertical dilution of precision
-    double verticalDilutionOfPrecision;
+    float verticalDilutionOfPrecision;
 
     uint8_t year;
     uint8_t month;
@@ -372,21 +375,21 @@ private:
                 month = time & 0x0f;
                 time >>= 4;
                 year = time & 0x7f;
-                longitude = (double) pack4(NAZA_MESSAGE_POS_LO, mask) / 10000000;
-                latitude = (double) pack4(NAZA_MESSAGE_POS_LA, mask) / 10000000;
-                altitude = (double) pack4(NAZA_MESSAGE_POS_AL, mask) / 1000;
-                double northVelocity = (double) pack4(NAZA_MESSAGE_POS_NV, mask) / 100;
-                double eastVelocity = (double) pack4(NAZA_MESSAGE_POS_EV, mask) / 100;
-                speed = sqrt(northVelocity * northVelocity + eastVelocity * eastVelocity);
-                courseOverGround = atan2(eastVelocity, northVelocity) * 180.0 / M_PI;
+                longitude = (float) pack4(NAZA_MESSAGE_POS_LO, mask) / 10000000.0f;
+                latitude = (float) pack4(NAZA_MESSAGE_POS_LA, mask) / 10000000.0f;
+                altitude = (float) pack4(NAZA_MESSAGE_POS_AL, mask) / 1000.0f;
+                float northVelocity = (float) pack4(NAZA_MESSAGE_POS_NV, mask) / 100.0f;
+                float eastVelocity = (float) pack4(NAZA_MESSAGE_POS_EV, mask) / 100.0f;
+                speed = sqrtf(northVelocity * northVelocity + eastVelocity * eastVelocity);
+                courseOverGround = atan2f(eastVelocity, northVelocity) * 180.0f / M_PI;
                 if (courseOverGround < 0) {
-                    courseOverGround += 360.0;
+                    courseOverGround += 360.0f;
                 }
-                verticalSpeedIndicator = -(double) pack4(NAZA_MESSAGE_POS_DV, mask) / 100;
-                verticalDilutionOfPrecision = (double) pack2(NAZA_MESSAGE_POS_VD, mask) / 100;
-                double ndop = (double) pack2(NAZA_MESSAGE_POS_ND, mask) / 100;
-                double edop = (double) pack2(NAZA_MESSAGE_POS_ED, mask) / 100;
-                horizontalDilutionOfPrecision = sqrt(ndop * ndop + edop * edop);
+                verticalSpeedIndicator = -(float) pack4(NAZA_MESSAGE_POS_DV, mask) / 100.0f;
+                verticalDilutionOfPrecision = (float) pack2(NAZA_MESSAGE_POS_VD, mask) / 100.0f;
+                float ndop = (float) pack2(NAZA_MESSAGE_POS_ND, mask) / 100.0f;
+                float edop = (float) pack2(NAZA_MESSAGE_POS_ED, mask) / 100.0f;
+                horizontalDilutionOfPrecision = sqrtf(ndop * ndop + edop * edop);
                 satellites = payload[NAZA_MESSAGE_POS_NS];
                 uint8_t fixType = payload[NAZA_MESSAGE_POS_FT] ^ mask;
                 uint8_t fixFlags = payload[NAZA_MESSAGE_POS_SF] ^ mask;
@@ -428,7 +431,7 @@ private:
                 if (y < magYMin) {
                     magYMin = y;
                 }
-                heading = atan2(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2));
+                heading = computeVectorAngle(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2));
             } else if (messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) {
                 firmwareVersion.version = pack4(NAZA_MESSAGE_POS_FW, 0x00);
                 hardwareVersion.version = pack4(NAZA_MESSAGE_POS_HW, 0x00);
@@ -466,6 +469,24 @@ private:
     {
         checksum1 += input;
         checksum2 += checksum1;
+    }
+
+    float radiansToDegrees(float radians) 
+    {
+        return radians * RAD_TO_DEG;
+    }
+
+    float computeVectorAngle(int16_t x, int16_t y)
+    {
+        float degrees = radiansToDegrees(-atan2f(y, x));
+
+        if (degrees < 0) {
+            degrees += 360.0;
+        }
+        if (degrees > 360.0) {
+            degrees -= 360.0;
+        }
+        return degrees;    
     }
 };
 
