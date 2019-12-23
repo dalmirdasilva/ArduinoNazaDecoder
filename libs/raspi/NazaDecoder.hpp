@@ -198,11 +198,6 @@ public:
 		    {
 			    cout << "Cannot read from the port!" << endl;
 		    }
-		    else if (rx_length == 0)
-		    {
-			    //No data waiting
-                cout << "No data available!" << endl;
-		    }
     		else
 	    	{
 		    	//Bytes received
