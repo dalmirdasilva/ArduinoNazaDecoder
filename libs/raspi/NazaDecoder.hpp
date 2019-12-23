@@ -17,14 +17,14 @@
 #include <termios.h>
 
 #define MESSAGE_HEADER_SIZE                 0x04
-#define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3A
+#define NAZA_MESSAGE_MAX_PAYLOAD_LENGTH     0x3a
 
 using namespace std;
 
 class NazaDecoder 
 {
 public:
-    enum GPSPayloadPosition 
+    enum GPSPayloadPosition
     {
         // date and time
         NAZA_MESSAGE_POS_DT = 0x04 - MESSAGE_HEADER_SIZE,
@@ -33,7 +33,7 @@ public:
         NAZA_MESSAGE_POS_LO = 0x08 - MESSAGE_HEADER_SIZE,
 
         // latitude (x10^7, degree decimal)
-        NAZA_MESSAGE_POS_LA = 0x0C - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_LA = 0x0c - MESSAGE_HEADER_SIZE,
 
         // altitude (in millimeters)
         NAZA_MESSAGE_POS_AL = 0x10 - MESSAGE_HEADER_SIZE,
@@ -54,10 +54,10 @@ public:
         NAZA_MESSAGE_POS_DV = 0x28 - MESSAGE_HEADER_SIZE,
 
         // position DOP (see uBlox NAV-DOP message for details)
-        NAZA_MESSAGE_POS_PD = 0x2C - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_PD = 0x2c - MESSAGE_HEADER_SIZE,
 
         // vertical DOP (see uBlox NAV-DOP message for details)
-        NAZA_MESSAGE_POS_VD = 0x2E - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_VD = 0x2e - MESSAGE_HEADER_SIZE,
 
         // northing DOP (see uBlox NAV-DOP message for details)
         NAZA_MESSAGE_POS_ND = 0x30 - MESSAGE_HEADER_SIZE,
@@ -75,17 +75,18 @@ public:
         NAZA_MESSAGE_POS_SF = 0x38 - MESSAGE_HEADER_SIZE,
 
         // XOR mask
-        NAZA_MESSAGE_POS_XM = 0x3B - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_XM = 0x3b - MESSAGE_HEADER_SIZE,
 
         // sequence number (not XORed), once there is a lock - increases with every message. When the lock is lost later LSB and MSB are swapped with every message.
-        NAZA_MESSAGE_POS_SN = 0x3C - MESSAGE_HEADER_SIZE,
+        NAZA_MESSAGE_POS_SN = 0x3c - MESSAGE_HEADER_SIZE,
 
         // checksum, calculated the same way as for uBlox binary messages
-        NAZA_MESSAGE_POS_CS = 0x3E - MESSAGE_HEADER_SIZE
+        NAZA_MESSAGE_POS_CS = 0x3e - MESSAGE_HEADER_SIZE
     };
 
-    enum MagnetometerPayloadPosition 
+    enum MagnetometerPayloadPosition
     {
+
         // magnetometer X axis data (signed)
         NAZA_MESSAGE_POS_CX = 0x04 - MESSAGE_HEADER_SIZE,
 
@@ -96,16 +97,17 @@ public:
         NAZA_MESSAGE_POS_CZ = 0x08 - MESSAGE_HEADER_SIZE
     };
 
-    enum ModuleVersionPayloadPosition 
+    enum ModuleVersionPayloadPosition
     {
+
         // firmware version
         NAZA_MESSAGE_POS_FW = 0x08 - MESSAGE_HEADER_SIZE,
 
         // hardware id
-        NAZA_MESSAGE_POS_HW = 0x0C - MESSAGE_HEADER_SIZE
+        NAZA_MESSAGE_POS_HW = 0x0c - MESSAGE_HEADER_SIZE
     };
 
-    enum MessageType 
+    enum MessageType
     {
         NAZA_MESSAGE_NONE_TYPE = 0x00,
         NAZA_MESSAGE_GPS_TYPE = 0x10,
@@ -113,22 +115,22 @@ public:
         NAZA_MESSAGE_MODULE_VERSION_TYPE = 0x30
     };
 
-    enum MessageSize 
+    enum MessageSize
     {
-        NAZA_MESSAGE_GPS_SIZE = 0x3A,
+        NAZA_MESSAGE_GPS_SIZE = 0x3a,
         NAZA_MESSAGE_MAGNETOMETER_SIZE = 0x06,
-        NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0C
+        NAZA_MESSAGE_MODULE_VERSION_SIZE = 0x0c
     };
 
     enum FixType
     {
         NO_FIX = 0x00,
+        FIX_DGPS = 0x01,
         FIX_2D = 0x02,
-        FIX_3D = 0x03,
-        FIX_DGPS = 0x04
+        FIX_3D = 0x03
     };
-
-    struct VersionSchemeType 
+    
+    struct VersionSchemeType
     {
         uint8_t revision;
         uint8_t build;
@@ -136,23 +138,17 @@ public:
         uint8_t major;
     };
 
-    struct VersionType 
+    union VersionType
     {
         uint32_t version;
         VersionSchemeType scheme;
     };
 
-    union GPSData 
-    {
-
-
-    };
-
     // Constructor (open serial port to communicate with GPS module)
     NazaDecoder()  : sequence(0), count(0), messageId(0), messageLength(0), checksum1(0), checksum2(0), magXMin(0), magXMax(0), magYMin(0), magYMax(0), longitude(0), latitude(0), altitude(0), speed(0), fix(NO_FIX), satellites(0), heading(0), courseOverGround(0), verticalSpeedIndicator(0), horizontalDilutionOfPrecision(
                 0), verticalDilutionOfPrecision(0), year(0), month(0), day(0), hour(0), minute(0), second(0), lastLock(0), locked(0) 
-    {        
-	    serial_fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
+    {       
+	    serial_fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY);  // | O_NDELAY);
 	    if (serial_fd == -1)
 	    {
 		    //ERROR - CAN'T OPEN SERIAL PORT
@@ -186,31 +182,25 @@ public:
     }
 
     // Read data from GPS module
-    uint8_t Read()
+    int Read()
     {
         //----- CHECK FOR ANY RX BYTES -----
 	    if (serial_fd != -1)
 	    {
 		    // Read up to 1024 characters (1KB data) from the port
-		    unsigned char rx_buffer[1024];
-		    auto rx_length = read(serial_fd, (void*)rx_buffer, 1024);		//Filestream, buffer to store in, number of bytes to read (max)
+		    unsigned char rx_buffer[1];
+		    auto rx_length = read(serial_fd, rx_buffer, 1);		//Filestream, buffer to store in, number of bytes to read (max)
 		    if (rx_length < 0)
 		    {
 			    cout << "Cannot read from the port!" << endl;
-		    }
-    		else
+		    }		    
+    		else if (rx_length == 1)
 	    	{
-		    	//Bytes received
-                for (int i = 0; i < rx_length; i++)
-                {
-                    auto decodedMessage = this->decode(rx_buffer[i]);
-                    if (decodedMessage != NAZA_MESSAGE_NONE_TYPE)
-                    {
-                        return decodedMessage;
-                    }                  
-	    	    }
-	        }
-        }
+		        auto decodedMessage = this->decode(rx_buffer[0]);
+		        if (decodedMessage != NAZA_MESSAGE_NONE_TYPE)
+			        return decodedMessage;
+            }
+	    }
 
         return NAZA_MESSAGE_NONE_TYPE;
     }
@@ -310,16 +300,16 @@ private:
 
     uint16_t lastLock;
     uint8_t locked;
+    
+    int serial_fd = -1;
 
-	int serial_fd = -1;
-
-    // Decode message from module
     uint8_t decode(int16_t input)
     {
         // header (part 1 - 0x55)
         if ((sequence == 0) && (input == 0x55)) {
             sequence++;
         }
+
         // header (part 2 - 0xaa)
         else if ((sequence == 1) && (input == 0xaa)) {
             checksum1 = 0;
@@ -330,10 +320,12 @@ private:
             updateChecksum(input);
             sequence++;
         }
+
         // message id
         // message payload length (should match message id)
         // store payload in buffer
-        else if ((sequence == 3) && (((messageId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) && (input == NAZA_MESSAGE_MAGNETOMETER_SIZE)) || ((messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
+        else if ((sequence == 3)
+                && (((messageId == NAZA_MESSAGE_GPS_TYPE) && (input == NAZA_MESSAGE_GPS_SIZE)) || ((messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) && (input == NAZA_MESSAGE_MAGNETOMETER_SIZE)) || ((messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) && (input == NAZA_MESSAGE_MODULE_VERSION_SIZE)))) {
             messageLength = input;
             count = 0;
             updateChecksum(input);
@@ -341,19 +333,23 @@ private:
         } else if (sequence == 4) {
             payload[count++] = input;
             updateChecksum(input);
-            if (count >= messageLength)
+            if (count >= messageLength) {
                 sequence++;
+            }
         }
+
         // verify checksum #1
         else if ((sequence == 5) && (input == checksum1)) {
             sequence++;
         }
+
         // verify checksum #2
         else if ((sequence == 6) && (input == checksum2)) {
             sequence++;
         } else {
             sequence = 0;
         }
+
         // all data in buffer
         if (sequence == 7) {
             sequence = 0;
@@ -432,7 +428,7 @@ private:
                 if (y < magYMin) {
                     magYMin = y;
                 }
-                heading = atan2(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2)); // ???? maybe bad function used insted of computeVectorAngle
+                heading = atan2(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2));
             } else if (messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) {
                 firmwareVersion.version = pack4(NAZA_MESSAGE_POS_FW, 0x00);
                 hardwareVersion.version = pack4(NAZA_MESSAGE_POS_HW, 0x00);
@@ -442,32 +438,27 @@ private:
             return NAZA_MESSAGE_NONE_TYPE;
         }
     }
-
+    
     int32_t pack4(uint8_t i, uint8_t mask)
     {
-        struct {
+        union {
             uint32_t d;
             uint8_t b[4];
         } v;
-        
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < 4; j++)
             v.b[j] = payload[i + j] ^ mask;
-        }
-
         return v.d;
     }
 
     int16_t pack2(uint8_t i, uint8_t mask)
     {
-        struct {
+        union {
             uint16_t d;
             uint8_t b[2];
         } v;
-        
         for (int j = 0; j < 2; j++) {
             v.b[j] = payload[i + j] ^ mask;
         }
-
         return v.d;
     }
 
