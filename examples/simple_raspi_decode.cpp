@@ -19,7 +19,7 @@ int main()
 				if (myGPS.isLocked())
 				{
 
-					std::cout << myGPS.getLatitude()<< ";" << myGPS.getLongitude() << ";" << myGPS.getAltitude() << ";" << myGPS.getSpeed() << ";" << myGPS.getSpeed() << endl;
+					std::cout << myGPS.getLatitude()<< ";" << myGPS.getLongitude() << ";" << myGPS.getAltitude() << ";" << myGPS.getSpeed() << endl;
 					//std::cout << "FixType: " << myGPS.getFixType() << endl;
 					//std::cout << "Satellites: " << (int)myGPS.getSatellites() << std::endl;
 					std::cout << (int)myGPS.getDay() << "-" << (int)myGPS.getMonth() << "-" << (int)myGPS.getYear() << ", " << (int)myGPS.getHour() << ":" << (int)myGPS.getMinute() << ":" << (int)myGPS.getSecond() << std::endl;

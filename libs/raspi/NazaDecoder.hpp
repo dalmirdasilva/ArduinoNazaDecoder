@@ -417,8 +417,8 @@ private:
             else if (messageId == NAZA_MESSAGE_MAGNETOMETER_TYPE) {
                 uint8_t mask = payload[4];
                 mask = (((mask ^ (mask >> 4)) & 0x0F) | ((mask << 3) & 0xF0)) ^ (((mask & 0x01) << 3) | ((mask & 0x01) << 7));
-                int16_t x = pack2(NAZA_MESSAGE_POS_CX, mask);
-                int16_t y = pack2(NAZA_MESSAGE_POS_CY, mask);
+                float x = (float) pack2(NAZA_MESSAGE_POS_CX, mask);
+                float y = (float) pack2(NAZA_MESSAGE_POS_CY, mask);
                 if (x > magXMax) {
                     magXMax = x;
                 }
@@ -476,7 +476,7 @@ private:
         return radians * RAD_TO_DEG;
     }
 
-    float computeVectorAngle(int16_t x, int16_t y)
+    float computeVectorAngle(float y, float x)
     {
         float degrees = radiansToDegrees(-atan2f(y, x));
 
