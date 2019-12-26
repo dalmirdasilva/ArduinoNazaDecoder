@@ -151,7 +151,8 @@ public:
     NazaDecoder()  : sequence(0), count(0), messageId(0), messageLength(0), checksum1(0), checksum2(0), magXMin(0), magXMax(0), magYMin(0), magYMax(0), longitude(0), latitude(0), altitude(0), speed(0), fix(NO_FIX), satellites(0), heading(0), courseOverGround(0), verticalSpeedIndicator(0), horizontalDilutionOfPrecision(
                 0), verticalDilutionOfPrecision(0), year(0), month(0), day(0), hour(0), minute(0), second(0), lastLock(0), locked(0) 
     {       
-	    serial_fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY);  // | O_NDELAY);
+        // open serial port for reading and writing and non-blocking
+	    serial_fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
 	    if (serial_fd == -1)
 	    {
 		    //ERROR - CAN'T OPEN SERIAL PORT
@@ -190,18 +191,21 @@ public:
         //----- CHECK FOR ANY RX BYTES -----
 	    if (serial_fd != -1)
 	    {
-		    // Read up to 1024 characters (1KB data) from the port
-		    unsigned char rx_buffer[1];
-		    auto rx_length = read(serial_fd, rx_buffer, 1);		//Filestream, buffer to store in, number of bytes to read (max)
+		    // Read up to 128 characters (0.25KB data) from the port
+		    unsigned char rx_buffer[128];
+		    auto rx_length = read(serial_fd, rx_buffer, 128);		//Filestream, buffer to store in, number of bytes to read (max)
 		    if (rx_length < 0)
 		    {
 			    cout << "Cannot read from the port!" << endl;
 		    }		    
-    		else if (rx_length == 1)
+    		else if (rx_length > 0)
 	    	{
-		        auto decodedMessage = this->decode(rx_buffer[0]);
-		        if (decodedMessage != NAZA_MESSAGE_NONE_TYPE)
-			        return decodedMessage;
+                for (int i = 0; i < rx_length; i++)
+                {
+    		        auto decodedMessage = this->decode(rx_buffer[i]);
+	    	        if (decodedMessage != NAZA_MESSAGE_NONE_TYPE)
+		    	        return decodedMessage;
+                }
             }
 	    }
 

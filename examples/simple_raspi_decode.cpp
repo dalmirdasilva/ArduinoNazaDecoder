@@ -31,16 +31,6 @@ int main()
 					std::cout << myGPS.getHeading() << std::endl;
 				}
 				break;
-			/*case NazaDecoder::NAZA_MESSAGE_MODULE_VERSION_TYPE:
-			if (myGPS.isLocked())
-			{
-				NazaDecoder::VersionSchemeType fs = myGPS.getFirmwareVersion().scheme;
-				NazaDecoder::VersionSchemeType hs = myGPS.getHardwareVersion().scheme;
-				std::cout << "Firmware version: v" << fs.major << "." << fs.minor << "." << fs.build << "." << fs.revision << endl;
-				std::cout << "Hardware version: v" << hs.major << "." << hs.minor << "." << hs.build << "." << hs.revision << endl;
-				std::cout << std::endl;
-			}
-			break;*/
 		}
 	}
 	
