@@ -211,7 +211,8 @@ uint8_t NazaDecoder::decode(int16_t input) {
             if (y < magYMin) {
                 magYMin = y;
             }
-            heading = computeVectorAngle(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2));
+            heading = -atan2(y - ((magYMax + magYMin) / 2), x - ((magXMax + magXMin) / 2)) * 180.0 / M_PI;
+            if(heading < 0) heading += 360.0; 
         } else if (messageId == NAZA_MESSAGE_MODULE_VERSION_TYPE) {
             firmwareVersion.version = pack4(NAZA_MESSAGE_POS_FW, 0x00);
             hardwareVersion.version = pack4(NAZA_MESSAGE_POS_HW, 0x00);
